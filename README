@@ -1,0 +1,122 @@
+Adapted for Linux in 2019 by David B. Lamkins.
+
+Xmartin 2.2 - grandson of xfroot - 24 July 1991 
+
+-----------------------------------------------
+Ed Kubaitis (ejk@ux2.cso.uiuc.edu)
+
+DISCLAIMER: This software is provided "as is" and with no warranties 
+	    of any kind.
+
+Xmartin is an X11 root window decorator based on the Barry Martin hopalong
+algorithm (see A. K. Dewdney's column in the 9/86 Scientific American.)
+See the HISTORY file for changes since xmartin 2.1.
+
+Installation Instructions
+-------------------------
+The materials include both an Imakefile and a simple makefile (xmartin.mk).
+Review the one you intend to use and make any changes needed for your 
+environment. 
+
+Xmartin is very floating-point intensive. Be sure to include in CFLAGS
+any options to improve floating-point performance (eg: -f68881 on Sun 3's.)
+
+If your system does not have perl(1) installed, you may want to comment out
+the lines having to do with "xmartin+". If you have perl but it is not in 
+/usr/bin/perl, modify the first line of xmartin+.pl. 
+
+If you find it necessary to modify the source code to get xmartin to compile 
+or execute correctly, I'd appreciate hearing about the problem and what you 
+did to get around it. I'd also appreciate hearing about success on platforms
+other than those below.
+
+Xmartin has been built & tested on the following client platforms:
+
+    o IBM RS/6000 540 AIX 3.1.6 - (X11R4) Perl 4.010
+    o Convex 240 9.0 OS (X11R4) Perl 4.010
+    o Sequent Symmetry S81 Dynix 3.0.17.7 (X11R4) Perl 4.010
+    o Sun 3/50 SunOS 3.5 (X11R4)
+    o Sun 3/60 SunOS 4.1 (X11R4)
+    o VaxServer 3500 BSD 4.3/Reno gcc (X11R4) Perl 3.37
+    o Apollo 425t DomainOS 10.3.4 unoptimized cc (X11R3) 
+    o VaxServer 3500 Ultrix-32 V3.0(Rev 64) (X11R4) Perl 3.15
+    o Cray 2 Unicos scc (X11R3)
+
+And with the following servers:
+
+    o NCD 19 monochrome - X11R3
+    o Sun 3/50 monochrome - X11R4
+    o Sun 3/60 color - X11R4
+    o Visual Turbo X-19 grayscale - X11R4
+    o IBM RS/6000 320 color - X11R3
+    o IBM Xstation 120 grayscale - X11R3
+    o IBM Xstation 120 color - X11R3
+
+
+Using xmartin
+-------------
+After installation, the unadorned command 'xmartin' should set your root 
+window to one of the roughly 1e64 basic hopalong patterns. Review the man 
+page for options you may want to try. 'xmartin help' or 'xmartin+ help' 
+yield a concise synopsis of options.
+
+On clients without strong floating point performance, try '-tile' which
+reduces calculation time by a factor of 2 to 64, and produces some pleasing
+effects as well.
+
+Using xmartin+
+--------------
+On systems with perl, several additional features are available with the
+xmartin+ front end to xmartin. Executing xmartin+ will create a ~/.xmartin+ 
+file with entries you can modify to tailor the random probabilities and
+parameter ranges hardwired into xmartin. The file has comments describing
+its format and several sets of xmartin parameters you can request by name by
+
+	      xmartin+ -n name
+
+'xmartin+ -q' lists the names available. 'xmartin+ -demo' will invoke xmartin
+once for each name.  (If you don't have perl, you can peek at these parameter
+sets in the xmartin+.pl source.) I'd appreciate hearing about any interesting
+parameter sets you discover.
+
+xmartin+ also has options to save an interesting pattern in ~/.xmartin+ and to
+generate patterns repeatedly.
+
+About perl: perl is a language devised by Larry Wall with most of the features
+of new awk, sed, tr, shell scripts, and C -- sort of one-stop shopping for 
+things you don't want to do in C. It has it's own newsgroup (comp.lang.perl)
+and O&A Nutshell book: Programming Perl (info: 1-800-338-6887.) The source 
+is freely available (jpl-devvax.jpl.nasa.gov in pub/perl.4.0/kits@0). It 
+builds easily on most un*x platforms and can usually be coaxed on the others.
+
+
+Acknowledgements
+----------------
+   o Clifford Pickover (cp1 sine sculptures)
+   o Renaldo Recuerdo (rr1 algorithm & other suggestions)
+   o Kevin Meek & Ranjan Bagchi (tvtwm support)
+   o Bob Bubon (DEC window manager support)
+   o David Elliot (multiple screen support)
+   o Robert Forsman (example code for reducing color intensity)
+   o Thomas Breuel (background color suggestion)
+   o Jon Stone (-p/-P %-of-pixels suggestion)
+   o Michael Traub (X-Vision/Sequent testing, color parse fix)
+   o Wayne Richardson (RT 4.3 compile fix)
+
+
+Quotes
+------
+
+       Clearly these curious configurations show us that the rules 
+       responsible for the construction of elaborate living tissue 
+       structures could be absurdly simple.
+
+					            --Barry Martin
+
+       ...delicately poised between random smoke and severe geometry.
+
+					          --Clifford Pickover
+
+----------------------------------
+Ed Kubaitis (ejk@ux2.cso.uiuc.edu)
+Computing Services Office - University of Illinois, Urbana

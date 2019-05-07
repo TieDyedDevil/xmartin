@@ -1,0 +1,383 @@
+.TH xmartin 1 "20 July 1991"
+.SH NAME
+xmartin \- set X root window to Martin hopalong pattern
+.SH SYNOPSIS
+.B xmartin
+\ [options]
+.br
+.B xmartin+
+\ [options]
+.br
+.SH DESCRIPTION
+.I Xmartin
+sets the X root window to a \fIhopalong\fP pattern.
+.I Xmartin+
+is an optional front end.
+The hopalong algorithm was attributed to Barry Martin of Aston University 
+(Birmingham, England) in  A. K. Dewdney's \fIComputer Recreations\fP column
+in the September 1986 \fIScientific American\fP. The \fBcp1\fR sine sculpture
+functions were published by Clifford Pickover in the January 1991 
+\fIAlgorithm\fP. The \fBrr1\fP function was developed by Renaldo Recuerdo
+of the Santa Cruz Operation.
+.SH OPTIONS
+.TP 5 5
+\fB\-f \fIfunction\fR
+Requests a specific hopalong function: 
+\fBmartin1\fR, \fBmartin2\fR, \fBejk1\fR, ..., \fBejk6\fR, \fBrr1\fR, or \fBcp1\fR. 
+By default, a function is selected at random. \fIxmartin+\fP allows tailoring
+probabilities that a function will be selected. (See FRONT END below.)
+
+Note: \fBcp1\fR is actually a family of roughly 2.8e19 functions with the 
+highest-order exponent ranging from 1 to 16 and requested by 
+\fB\-f cp1,\fIorder\fR. Within
+a \fBcp1\fR order, there are \fB16**\fIorder\fR function permutations. A
+specific permutation is requested by \fB\-f cp1,\fIorder,xn,yn\fR,
+where \fIxn\fR and \fIyn\fR are integers from \fB0\fR to 
+\fB(4**\fIorder\fB)\-1\fR.
+.TP 5 5
+.B "\-a  \-b  \-c \-d \-x \-y \fI{ r | r:r | r::r }\fR"
+Sets the corresponding hopalong parameter to the real value 
+\fIr\fP or to a random value in the range \fIr:r\fP or \fIr::r\fP. 
+Two colons indicate
+a plus-or-minus range. For example, \-100:1e3 means a value between \-100 and 
+1000, while 1::3 means a value between 1 and 3 or between \-1 and \-3.
+\fBabcd\fR are constants, while \fBxy\fR are the coordinates of the
+starting point for the calculation.
+By default, random values are assigned for \fBabcd\fR. The ranges for 
+default random values
+can be tailored with the \fIxmartin+\fP front end described below.
+.TP 5 5
+\fB\-p \fIn \fB\-P \fIn\fR
+Sets maximum points to calculate to \fIn\fP. \fB\-p\fP sets the maximum
+for in-range (i.e. on display) points. \fB\-P\fP sets the total points
+to calculate. Defaults: \fB\-p\fP: 25% of pixels in server display (or tile).
+\fB\-P\fP: 3 times the \fB\-p\fP value. Values of 100 or less are interpreted
+as percent of pixels in display or tile.
+.TP 5 5
+.B "\-dynam \fI[ nd ]\fR"
+Sets the number of points calculated before display.
+Default is \fB\-dynam 1024\fR (128 if \fB\-tile\fR is selected.)
+.TP 5 5
+.B "\-static"
+Display after all points calculated.
+.TP 5 5
+.B "\-tile \fI[ XxY ]\fR"
+Requests that the root window be tiled with a pattern smaller than the
+entire display. \fIXxY\fP, if present, requests a specific tiling pattern. 
+For example, \fB\-tile 3x4\fP requests a tile size of 1/3 the display width and
+1/4 the display height. A random \fIXxY\fR is used if not supplied.
+This option substantially reduces calculation time and
+memory requirements for the pattern.
+.TP 5 5
+.B "\-perturb \fI[ n[,v] ]\fR"
+Perturbs the calculation every \fIn\fP points by offsetting the
+current x and y values by \fIv\fP. If \fIv\fR or \fIn\fR are not supplied,
+random values are used.
+.TP 5 5
+.B "\-coord \fR{ \fBxy \fR| \fByx \fR| \fBra \fR| \fBar \fR}"
+Coordinate mode. Calculation (x,y) interpreteted as
+(x,y), (y,x), (radius,angle), or (angle,radius). Default is \fBxy\fR
+except for \fB\-f cp1\fR, where one of the four is selected at random.
+.TP 5 5
+.B "\-zoom \fIz\fR"
+Multiplies calculation coordinates by \fIz\fP before display. 
+Thus, \fIz\fP > 1 magnifies, and \fIz\fP < 1 reduces. Defaults to an
+appropriate value for the selected function.
+.TP 5 5
+.B "\-move \fId,p\fR"
+Moves the  pattern \fIp\fR pixels in the direction \fId\fP. 
+The direction \fId\fP is either a
+compass degree heading (0 = north, 90 = east, 180 = south, etc),
+or the common abbreviations ('n', 'sw', 'nnw', etc.) 
+Thus, for example,
+\fB\-move ne,300\fP moves the pattern 300 pixels
+toward the upper right corner.
+.TP 5 5
+.B "\-recall"
+Recalls hopalong parameters 
+(\fB\-f\fP, \fB\-a\fP, \fB\-b\fP, \fB\-c\fP, \fB\-d\fP, \fB\-x\fP, \fB\-y\fP,
+\fB\-zoom\fP, \fB\-move\fP, \fB\-tile\fP, \fB\-perturb\fP)
+from the last pattern before processing any other 
+arguments. Thus, for example, \fB\-recall \-zoom 0.5 \-perturb\fP will 
+zoom out and add random perturbation to the previous pattern. The recall 
+parameters
+are saved in \fI$HOME/.xmartin\fP. A pattern generated with \fB\-recall\fP
+is not itself saved.
+.TP 5 5
+.B "\-bg \fIcolor[,intensity]\fR"
+Requests a specific background color for the pattern. If present, 
+\fIintensity\fR (a value from 0.0 to 1.0) specifies the color intensity.
+For example, \fB\-bg blue,0.20\fR yields a very dark
+blue background. By default, random low intensity color backgrounds are
+used (see RESOURCES below.)
+.TP 5 5
+.B "\-nc \fIn\fR"
+For color or grayscale displays, sets the number of points
+to calculate before changing colors. (Default: 1/16th of \fB\-P\fP value,
+except for \fB\-f cp1\fP on color displays, where the default is the 
+\fB\-P\fP value.)
+.TP 5 5
+.B "\-nrc"
+Non-random color sequence.
+.TP 5 5
+.B "\+rv \-rv"
+Requests black-on-white or white-on-black patterns respectively. \fB\-rv\fR
+(white-on-black) is the default for monochrome displays.
+.TP 5 5
+.B "\-mono"
+Forces white-on-black for a grayscale or color displays.
+.TP 5 5
+.B "\-v"
+Prints \fIxmartin\fP version and patch level.
+.SH FRONT END
+On systems with \fIperl\fP installed, the \fIxmartin+\fP front end
+may be used to invoke \fIxmartin\fP with probabilities and parameters
+tailored to your preferences, or to save or request interesting 
+parameter sets by name. Tailored parameters and recorded values are stored
+in \fI$HOME/.xmartin+\fP. 
+If you don't have  a \fI.xmartin+\fP
+file, one with comments and examples is created.
+.TP 5 5
+.B "\-q"
+Prints table of \fI.xmartin+\fP entry names, weights, and comments.
+.TP 5 5
+.B "\-demo"
+Executes each entry once.
+.TP 5 5
+.B "\-n \fIname\fR [\fB\-n \fIname\fR] ..."
+Requests pattern(s) by name. (Also \fB\-f\fR)
+.TP 5 5
+.B "\-repeat \fI[seconds]\fR"
+Generates patterns indefinitely (until ^C), pausing the requested number
+of seconds between each pattern. Thus \fBxmartin+ \-repeat 300 \-tile\fR
+will generate a random tiled background about every 5 minutes.
+.TP 5 5
+.B "\-save"
+Saves the exact hopalong parameters for the previous pattern
+in the \fI.xmartin+\fR file so it can be recalled later with
+\fBxmartin+ \-n \fIname\fR. You will be prompted for the name and a brief
+comment.
+.TP 5 5
+.B "\-file \fIfile\fR"
+Requests a file other than \fI~/.xmartin+.
+.PP
+All \fIxmartin\fP 
+parameters (except \fB\-recall\fP) are also accepted, so you can
+add to or alter options generated by \fIxmartin+\fP.
+.SH RESOURCES
+For color or grayscale displays, xmartin honors the following resource
+for background color:
+.PP
+.B "xmartin*background: \fIcolor[,intensity]\fR"
+.br
+.PP
+\fIIntensity\fR, if present, is a real number from 0.0 to 1.0 which indicates
+the intensity of the color desired (default: 1.0). Another permissable value
+for this resource is \fBrandom\fR (the default) which selects one of
+the 16 background resources below.
+.PP
+For color displays, xmartin honors the following resources for foreground
+and random background colors (shown with default values):
+.PP
+.B "xmartin*Color1: red"
+.br
+.B "xmartin*Color2: green"
+.br
+.B "xmartin*Color3: blue"
+.br
+.B "xmartin*Color4: yellow"
+.br
+.B "xmartin*Color5: magenta"
+.br
+.B "xmartin*Color6: cyan"
+.br
+.B "xmartin*Color7: coral"
+.br
+.B "xmartin*Color8: slate blue"
+.br
+.B "xmartin*Color9: orange red"
+.br
+.B "xmartin*Color10: spring green"
+.br
+.B "xmartin*Color11: orange"
+.br
+.B "xmartin*Color12: steel blue"
+.br
+.B "xmartin*Color13: pink"
+.br
+.B "xmartin*Color14: violet"
+.br
+.B "xmartin*Color15: firebrick"
+.br
+.B "xmartin*Color16: gold"
+.br
+.PP
+.B "xmartin*bgColor1: black"
+.br
+.B "xmartin*bgColor2: white,.20"
+.br
+.B "xmartin*bgColor3: white,.25"
+.br
+.B "xmartin*bgColor4: white,.30"
+.br
+.B "xmartin*bgColor5: white,.35"
+.br
+.B "xmartin*bgColor6: blue,.20"
+.br
+.B "xmartin*bgColor7: blue,.25"
+.br
+.B "xmartin*bgColor8: blue,.30"
+.br
+.B "xmartin*bgColor9: red,.25"
+.br
+.B "xmartin*bgColor10: red,.30"
+.br
+.B "xmartin*bgColor11: red,.35"
+.br
+.B "xmartin*bgColor12: green,.25"
+.br
+.B "xmartin*bgColor13: green,.30"
+.br
+.B "xmartin*bgColor14: cyan,.20"
+.br
+.B "xmartin*bgColor15: cyan,.25"
+.br
+.B "xmartin*bgColor16: cyan,.30"
+.br
+.PP
+For grayscale displays, xmartin honors the following resources for foreground
+and random background shades (shown with default values):
+.PP
+.B "xmartin*Gray1: white"
+.br
+.B "xmartin*Gray2: white,.96"
+.br
+.B "xmartin*Gray3: white,.92"
+.br
+.B "xmartin*Gray4: white,.88"
+.br
+.B "xmartin*Gray5: white,.84"
+.br
+.B "xmartin*Gray6: white,.80"
+.br
+.B "xmartin*Gray7: white,.76"
+.br
+.B "xmartin*Gray8: white,.72"
+.br
+.B "xmartin*Gray9: white,.68"
+.br
+.B "xmartin*Gray10: white,.64"
+.br
+.B "xmartin*Gray11: white,.60"
+.br
+.B "xmartin*Gray12: white,.56"
+.br
+.B "xmartin*Gray13: white,.52"
+.br
+.B "xmartin*Gray14: white,.48"
+.br
+.B "xmartin*Gray15: white,.44"
+.br
+.B "xmartin*Gray16: white,.40"
+.br
+.PP
+.B "xmartin*bgGray1: black"
+.br
+.B "xmartin*bgGray2: white,.02"
+.br
+.B "xmartin*bgGray3: white,.04"
+.br
+.B "xmartin*bgGray4: white,.06"
+.br
+.B "xmartin*bgGray5: white,.08"
+.br
+.B "xmartin*bgGray6: white,.10"
+.br
+.B "xmartin*bgGray7: white,.12"
+.br
+.B "xmartin*bgGray8: white,.14"
+.br
+.B "xmartin*bgGray9: white,.16"
+.br
+.B "xmartin*bgGray10: white,.18"
+.br
+.B "xmartin*bgGray11: white,.20"
+.br
+.B "xmartin*bgGray12: white,.22"
+.br
+.B "xmartin*bgGray13: white,.24"
+.br
+.B "xmartin*bgGray14: white,.26"
+.br
+.B "xmartin*bgGray15: white,.28"
+.br
+.B "xmartin*bgGray16: white,.30"
+.br
+.PP
+Foreground colors and grays are used in the order above if \fB\-nrc\fR is
+used. Otherwise they are used in a random order.
+Color is changed every \fB\-nc \fIn\fR points during the calculation.
+.SH ALGORITHMS
+The basic algorithm for all patterns is:
+.PP
+\fB
+.nf
+	{pick initial x,y and constants A,B,...}
+	while(not enough points) {
+	   x1 = X1(x,y);
+	   y1 = Y1(x,y);
+	   x = x1; y=y1;
+	   plot(x,y);
+	   }
+\fR
+
+\fBmartin1\fR:
+x1 = y  \- ( (x<0) ? sqrt(fabs(B*x\-C)) : \-sqrt(fabs(B*x\-C)) );
+y1 = A \- x;
+
+\fBmartin2\fR:
+x1 = y  \- sin(x);
+y1 = A \- x;
+
+\fBejk1\fR:
+x1 = y  \- ( (x>0) ? (B*x\-C) : \-(B*x\-C) );
+y1 = A \- x;
+
+\fBejk2\fR:
+x1 = y  \- ( (x<0) ? log(fabs(B*x\-C)) : \-log(fabs(B*x\-C)) );
+y1 = A \- x;
+
+\fBejk3\fR:
+x1 = y  \- ( (x>0) ? (sin(B*x)\-C) : \-(sin(B*x)\-C) );
+y1 = A \- x;
+
+\fBejk4\fR:
+x1 = y  \- ( (x>0) ? (sin(B*x)\-C) : \-sqrt(fabs(B*x\-C)) );
+y1 = A \- x;
+
+\fBejk5\fR:
+x1 = y  \- ( (x>0) ? (sin(B*x)\-C) : \-(B*x\-C) );
+y1 = A \- x;
+
+\fBejk6\fR:
+x1 = y  \- asin(fmod(B*x, 1.0));
+y1 = A \- x;
+
+\fBrr1\fR:
+x1 = y  \- ( (x<0) ? \-pow(fabs(B*x\-C), D) : pow(fabs(B*x\-C), D) );
+y1 = A \- x;
+
+\fBcp1\fR:
+x1 = sin(p1) + sin(p2)*sin(p2) + sin(p3)*sin(p3)*sin(p3) + ...
+y1 = sin(q1) + sin(q2)*sin(q2) + sin(q3)*sin(q3)*sin(q3) + ...
+
+Each pn or qn is either A*x, A*y, B*x, or B*y.
+.fi
+
+.SH BUGS
+On some systems, certain parameter combinations cause xmartin to abort
+with a floating point exception. (The \fIneuron\fP pattern defined by
+\fIxmartin+\fP is an example.)
+.SH AUTHOR
+.LP
+Ed Kubaitis, Computing Services Office, University of Illinois.

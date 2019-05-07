@@ -1,0 +1,275 @@
+#! /usr/bin/perl
+#
+#   xmartin+ - front end to the xmartin root window decorator
+#
+#   xmartin+ [-q] [-demo] [-n name] [-f file] [-repeat [seconds]] [-save]
+#            [xmartin-options]
+
+$File = "$ENV{'HOME'}/.xmartin+";
+$xmFile = "$ENV{'HOME'}/.xmartin";
+$xmNoArg ="^-(mono|nrc|v|rv|static)|\\+rv\$";
+$xmArg = "^-(p|P|a|b|c|d|nc|zoom|move|coord|display)\$";
+$xmOptArg = "^-(bg|dynam|tile|perturb)\$";
+
+#---parse arguments------------------------------------------------------------
+
+while($_ = shift) {
+   if    (m!^-[nf]$!) { $n = shift; &usage unless $n; push(@Names,$n); }
+   elsif (m!^-file$!) { $File = shift; &usage unless $File; }
+   elsif (m!^-q$!) { $Query++; }
+   elsif (m!^-demo$!) { $Demo++; }
+   elsif (m!^-save$!) { $Save++; }
+   elsif (m!^-repeat$!) { 
+      $Repeat++;
+      $Sleep = ($ARGV[0] =~ /^\d+/) ? shift : 1;
+      }
+   else {
+      if    (m!$xmNoArg!)  { $xmOpts .= "$_ "; }
+      elsif (m!$xmArg!)    { $xmOpts .= "$_ " . shift . ' '; }
+      elsif (m!$xmOptArg!) {
+	 $xmOpts .= "$_ ";
+	 if ($ARGV[0] !~ /^[-+]/ ) { $xmOpts .= shift . ' '; }
+	 }
+      else { &usage; }
+      }
+   }
+
+&initfile unless -s $File;
+
+#---read file, concatenate continuation lines ---------------------------------
+
+open(File, $File) || die "xmartin+: can't open $File: $!\n";
+while(<File>) { $text .= $_; }
+$text =~ s/\\\s*\n//gm; @Lines = split(/\n/, $text);
+
+#---parse file, extract entries------------------------------------------------
+
+for(@Lines) {
+   $line = $_;
+   #---trim/skip comments
+   s/#.*$//; next if m!^\s*$!;
+   #---remove extraneous white space
+   s/^\s+//; s/\s+$//; s/\s+(:)/$1/g; s/(:)\s+/$1/g; s/\s+/ /g;
+   #---check syntax
+   m!^\S+:.*:\d+\.?\d*:\S! || die "xmartin+: invalid entry in $File:\n$line\n";
+   #---extract and record fields
+   m!([^:]*):([^:]*):([^:]*):(.*)!;
+   $name = $1; $comment = $2; $weight = $3; $parms = $4;
+   if ($name =~ /sv(\d+)/) {
+      $Svsqn = $1 unless $Svsqn > $1;
+      }
+   $Sum_weight += $weight;
+   $Comment{$name} = $comment;
+   $Weight{$name} = $weight;
+   #---check if reference to previous entry
+   if ($parms =~ /{(.*)}/ ) {
+      $pname = $1; $pname =~ s/\s//g;
+      if (!$Parms{$pname}) {
+	 warn "xmartin+: no previous entry {$pname} for this line:\n";
+	 die "$line\n";
+	 }
+      $parms =~ s/{.*}/$Parms{$pname}/;
+      }
+   $Parms{$name} = $parms;
+   }
+
+#---If save, save ~/.xmartin parms as entry in xmartin+ tailoring file-------
+
+if ($Save) {
+   -s $xmFile || die "xmartin+: $xmFile empty or non-existent\n";
+   open(xmFile, $xmFile) || die "xmartin+: can't open $xmFile:$!\n";
+   while(<xmFile>) { chop; $savetext .= " $_"; }
+   $Svsqn++;
+   while (!$Svname) {
+      print "Enter name for save entry[sv$Svsqn]:";
+      $Svname = <>; chop $Svname;
+      if (!length($Svname)) { $Svname = "sv$Svsqn"; last; }
+      if ($Svname !~ /^[A-Za-z0-9_]+$/) {
+	 warn "xmartin+: '$Svname' is not a valid save name.\n";
+	 undef $Svname; next;
+	 }
+      if ($Parms{$Svname}) {
+	 warn "xmartin+: '$Svname' entry already exists!\n";
+	 undef $Svname; next;
+	 }
+      }
+   print "Enter brief comment for save entry[none]:";
+   $Svcom = <>; chop $Svcom;
+
+   open(File, ">$File") || die "xmartin+: can't open $File for writing:$!\n";
+   print File $text;
+   print File "$Svname:$Svcom:0:$savetext\n";
+   close(File);
+   exit(0);
+   }
+
+
+#---If query, print out names-weights-comments and exit----------------------
+
+if ($Query) {
+format top =
+Name----------  Weight Comment---------------------------------------------
+.
+format STDOUT =
+@<<<<<<<<<<<<<  @>>>>> @<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+$_,              $weight, $Comment{$_}
+.
+   for (sort keys(%Weight)) { $weight = $Weight{$_} ? $Weight{$_} : ''; write; }
+   exit(0);
+   }
+
+#---If demo, set to execute each entry once------------------------------------
+
+if ($Demo) { for (sort keys(%Parms)) { push(@Names, $_); } }
+
+#---if specific entries not requested, select one randomly---------------------
+
+if ($#Names < 0) { srand(); &random;  }
+
+#---generate/execute xmartin call(s)--------------------------------------------
+
+for $n(@Names) {
+   $Parms{$n} || die qq|xmartin+: No entry found in $File for "-n $n"\n|;
+   }
+
+while(1) {
+   for $n(@Names) {
+      print "xmartin+" . '=' x 60 . "\n";
+
+      print "xmartin+ $n $Comment{$n}\n";
+      print "xmartin+ $Parms{$n}\n";
+      $xmOpts && print "xmartin+ $xmOpts\n";
+
+      $cmd = "xmartin $Parms{$n} $xmOpts";
+      if (!fork) { exec($cmd); }  # system($cmd) masks ^C interrupts
+      wait;
+
+      $Repeat && sleep($Sleep);
+      }
+
+   last unless $Repeat;
+   &random if $Random;
+   }
+
+#---initfile - set up default .xmartin+ file-----------------------------------
+
+sub initfile {
+   warn "xmartin+: Setting up default xmartin+ file in $File\n";
+   warn "xmartin+: You may want to read the comments in this file.\n";
+   open (File, ">$File") || die "xmartin+: can't open $File:$!\n";
+   print File <<EOF;
+#
+#  xmartin+ tailoring file
+#
+#  Entries in this file are used by the xmartin+ front end to generate an
+#  xmartin call tailored to suit your preferences. Entry format:
+#
+#     <name>:<comment>:<weight>:<xmartin-parms>
+#
+#     <name> : a name for the entry. Used in "xmartin+ -n name".
+#
+#     <comment>: a brief comment describing the entry
+#
+#     <weight> : any positive numerical value. The weight divided by the 
+#                sum of the weights for all entries is the probability 
+#                that xmartin+ will select this entry. A weight of 0 can
+#                be used to record interesting parameters for recall by
+#                name.
+#
+#     <xmartin-parms> : the xmartin parameters for this entry. You can
+#                       include the parameters of a previously defined
+#                       entry by placing the name of the entry in braces
+#                       "{}" in the parms field of a subsequent entry.
+#            
+#  The default file has entries matching the random parameters used by 
+#  xmartin itself. Except "-tile" is used for the smallish martin2 patterns.
+#  The xmartin abc defaults for ejk2 and ab defaults for cp1 cannot be 
+#  expressed as linear, orthogonal ranges, so their setting is left to
+#  xmartin itself.
+#
+
+martin1 :(square root): 33 : -f martin1 -a 40::1540  -b 3::20  -c  100::3100 
+martin2 :(sine)       :  2 : -f martin2 -a  3.0715927::3.2115927 -tile
+ejk1    :(linear)     :  8 : -f ejk1 -a -500:500 -b -0.4:+0.4 -c 10::110
+ejk2    :(log)        :  3 : -f ejk2  #can't do xmartin non-linear abc defaults
+ejk3    :(sine)       :  6 : -f ejk3 -a -500:500 -b .05::.40 -c 30::110
+ejk4    :(sine-sqrt hybrid): 6:\\
+	 -f ejk4 -a -1000:1000 -b 1::10 -c 30:70 -zoom 0.7
+ejk5    :(sine-linear hybrid): 6:\\
+	 -f ejk5 -a -600:600 -b .1::.4  -c 20::110 -zoom 0.7
+ejk6    :(arc sine):  6 : -f ejk6 -a 550:650 -b .5::1.5 -zoom 1.2 -move 320,500
+
+rr1  :(Recuerdo power):  6 : -f rr1 -a 0::100 -b 0::20 -c 0::200 -d 0:.9
+cp1  :(Pickover sine) : 25 : -f cp1
+
+jigsaw    :(perturbed martin2): 0 : -f martin2 -perturb 100,100
+canvas    :(perturbed martin2): 0 : -f martin2 -perturb 20,80
+flag      :(perturbed martin2): 0 : -f martin2 -perturb 100,1 -zoom 80
+angelhair :(perturbed martin2): 0 :\\
+	   -f martin2 -perturb 5,1.6 -zoom 120 -move 140,250 -a -3.07:-3.18
+debris    :(perturbed martin2): 0 : {angelhair} -a -3.20:-3.25
+
+4lobe     :(ejk1 subset): 0 : -f ejk1 -a 205:215 -b 0.39:0.40 -c 35:45
+nucleus   :(ejk1 subset): 0 : -f ejk1 -a -30:-50 -b -.13:-.14 -c 50::70
+shards    :(ejk1 subset): 0 : -f ejk1 -a 125:130 -b 1 -c 60:70 -zoom 0.2
+peacock   :(ejk1 subset): 0 : -f ejk1 -a 125:128 -b 1.05 -c 60:65 -zoom 0.2
+neuron    :(ejk1 subset): 0 :\\
+	   -f ejk1 -a 130:140 -b -1.1  -c -55:-65 -zoom 0.1 -nc 2000 -P 250000
+propeller :(ejk1 subset): 0 :\\
+	   -f ejk1 -a 175:185 -b -0.28:-0.31 -c -40:-50 -zoom 0.2
+dragonfly :(ejk1 subset): 0 :\\
+           -f ejk1 -a 400:500 -b 1.4:1.5  -c -40:-60 -zoom 0.02 -move ne,200
+butterfly :(ejk1 subset): 0 :\\
+           -f ejk1 -a 140:200 -b .69:.70 -c -190:-200 -zoom 0.04 -p 100000
+parkayfly :(ejk1 subset): 0 : {butterfly} -perturb 
+
+nova      :(polar ejk6): 0 : -f ejk6 -coord ra -move 0,0 -P 100000
+
+#-----entries saved with "xmartin+ -save" after this line---------------------
+fission:(save example):0: -f ejk1 -zoom 1.00000000000000000e+00 -a -4.4195582241184226e+01 -b 1.62878468936082850e-01 -c 5.92603781619302480e+01 -x 0.00000000000000000e+00 -y 0.00000000000000000e+00 -perturb 1218,2.09941657103072770e+02
+fusion:(save example):0: -f ejk1 -zoom 1.00000000000000000e+00 -a 4.44351629250406570e+02 -b 7.12978960411583960e-02 -c -9.3767407916053031e+01 -x 0.00000000000000000e+00 -y 0.00000000000000000e+00 -perturb 9737,8.39145051045554060e+02
+rocketeer:(Dan Lovinger):0: -f cp1,7,5436,5307 -zoom 1.25000000000000000e+02 -a 1.85005116080874790e+01 -b 6.16683720269582650e+00 -x 2.00000000000000000e+01 -y 3.00000000000000000e+01 -move 310,320 -coord xy
+EOF
+   exit(0);
+   }
+
+#---random - select an entry at random-----------------------------------------
+
+sub random {
+   local($sum_weight) = 0;
+   $Sum_weight > 0 || die "xmartin+: no $File entries with non-zero weight\n";
+   $#Names = -1;
+   $Random = rand($Sum_weight);
+   for(keys %Weight) {
+      $weight = $Weight{$_};
+      next unless $weight > 0;
+      $sum_weight += $weight;
+      next if $sum_weight < $Random;
+      push(@Names, $_); last;
+      }
+   }
+
+#---usage - explain usage & exit-----------------------------------------------
+
+sub usage { 
+   print STDERR <<EOF;
+usage: xmartin+
+
+[-q] [-n name] [-demo] [-repeat [secs]] [-save] [-file file] [xmartin-opts] 
+
+   -q:      prints table of entry names, weights, & comments
+   -n name: add named entry to list of patterns to generate (also -f name)
+   -demo:   executes every entry once
+   -repeat: repeats patterns indefinitely (until ^C). If present "secs" is
+	    time to sleep between patterns.
+   -save:   save the exact hopalong parameters for the previous pattern as an
+	    entry in the xmartin+ tailoring file so it can be recalled later 
+	    with "xmartin+ -n name". You will be prompted for the name to use 
+	    (default: svnn) and a brief comment to include in the entry.
+   -file file: use a file other than ~/.xmartin+
+
+   xmartin-opts: xmartin(1) options (except -recall) to add to or alter 
+		 those generated by xmartin+
+EOF
+   exit(1);
+   }

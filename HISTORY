@@ -1,0 +1,69 @@
+Xmartin Revision History
+------------------------
+
+xmartin 2.2 (patchlevel 2) - 24 July 1991
+-----------------------------------------
+   o new patterns: polar coordinate renderings of Pickover sine sculptures. 
+     Plus 3 new functions: ejk4(sine-sqrt hybrid), ejk5(sine-linear hybrid), 
+     ejk6(arc sine)
+   o -coord {xy|yx|ra|ar} coordinate mode (the last two are polar)
+   o parameter display changes
+   o changes for clean compile on RT 4.3 and other platforms
+   o xmartin+ accepts -f as equivalent to -n.
+   o general code & documentation cleanup
+
+xmartin 2.1 (patchlevel 1) - 16 June 1991
+-----------------------------------------
+   o new pattern function (-f ejk3)
+   o static (XImage) plotting mode is back by popular request (-static)
+   o Sequent/Convex color parsing fix
+   o default dynamic points lowered from 8192 to 1024 to prevent X-Vision 
+     & XSight server crashes
+   o xmartin+ recognizes xmartin "-d" option
+   
+xmartin 2.0 (patchlevel 0) - 8 June 1991
+----------------------------------------
+   o new patterns: Clifford Pickover's 1st->16th order sine sculptures from
+     the January 91 Algorithm. And a generalized exponent version of the
+     Martin square root by Renaldo Recuerdo of the Santa Cruz Operation.
+   o option/resources for subdued color background (including random)
+   o special grayscale display resources & defaults 
+   o black-on-white +rv option
+   o support for DEC window manager & for multi-screen displays
+   o new xmartin+ options: -repeat, -save 
+   o -p/-P values of 100 or less interpreted as % of display/tile pixels
+   o random number improvements: seed period increased from 12.1 days to 17
+     years; initial numbers in sequence skipped to prevent similar seeds on 
+     consecutive executions.
+   o XImage ("static") plotting mode removed to simplify background color
+     options & the X interface in general. Measurements indicated XImage 
+     mode improved elapsed time substantially only in the case of full screen
+     (non-tiled) patterns on very fast clients to remote monochrome servers, 
+     and then only by ~15 seconds. If "-dynam" is omitted, plotting now 
+     defaults to "-dynam 8192".
+
+xmartin 1.1 (patchlevel 1) - 25 April 1991
+------------------------------------------
+   o tvtwm (Tom's Virtual Tab Window Manager) support
+   o fix test for color display in xmartin.c hopalong()
+   o minor code & documentation cleanup
+
+xmartin 1.0 (patchlevel 0) - 8 April 1991
+-----------------------------------------
+   o new patterns with three variations on the original Martin hopalong
+   o option for tiling effects and/or speed
+   o option for effects by periodically perturbing (x,y)
+   o random color sequences and tailorable resources for colors
+   o ranges for hopalong parameters
+   o zoom and pan options 
+   o option to recall and alter previous hopalong parameters
+   o optional Perl xmartin+ tailors probabilities, replays interesting patterns
+
+xfroot - 4 June 1990
+--------------------
+   o color and dynamic (display-as-calculated) options
+   o new algorithm for random default parameters
+
+xfroot - September 1989
+-----------------------
+   o original monochrome version
